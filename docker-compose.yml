@@ -1,0 +1,9 @@
+services:
+  app:
+    image: ruby:3.4.1
+    volumes:
+      - ./:/app
+      - bundle:/usr/local/bundle
+    working_dir: /app
+volumes:
+  bundle:
