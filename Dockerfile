@@ -19,13 +19,25 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 nano && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-ENV EDITOR=nano
+# Install node.js for vite_rails
+# https://stackoverflow.com/a/57546198/338986
+ENV NODE_VERSION=22.12.0
+# RUN apt install -y curl
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+ENV NVM_DIR=/root/.nvm
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN node --version
+RUN npm --version
 
-# Set production environment
+# Set environment
+ENV EDITOR=nano
 ENV BUNDLE_PATH="/usr/local/bundle"
 
 # Throw-away build stage to reduce size of final image
-FROM base AS build
+FROM base AS dev
 
 # Set production environment
 ENV RAILS_ENV="production" \
@@ -37,6 +49,7 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
+FROM dev AS build
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 RUN bundle install && \
