@@ -1,9 +1,15 @@
 services:
   app:
-    image: ruby:3.4.1
+    # image: ruby:3.4.1
+    build:
+      target: base
+    command: ['rails', 'server', '-port=3000', '--binding=0.0.0.0']
     volumes:
       - ./:/app
       - bundle:/usr/local/bundle
     working_dir: /app
+    ports:
+      - 127.0.0.1:3000:3000
+
 volumes:
   bundle:
