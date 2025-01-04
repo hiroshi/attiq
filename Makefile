@@ -11,10 +11,13 @@ docker-push: tag
 	docker push $(IMAGE)
 
 export TAG
-deploy: tag
+deploy: tag sleep
 	cat gke/manifest.yaml | envsubst | $(KUBECTL) apply -f -
 	$(KUBECTL) rollout status deployment/attic
 
+# Wait for the pushed image will be available for deployment
+sleep:
+	sleep 1
 
 .PHONY: config/credentials.yml.enc
 config/credentials.yml.enc:
