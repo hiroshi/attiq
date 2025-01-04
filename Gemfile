@@ -64,3 +64,6 @@ end
 
 # application
 gem "vite_rails", "~> 3.0"
+gem "faraday", "~> 2.12"
+
+gem "jwt", "~> 2.10"

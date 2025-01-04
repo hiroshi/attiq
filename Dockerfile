@@ -39,17 +39,18 @@ ENV BUNDLE_PATH="/usr/local/bundle"
 # Throw-away build stage to reduce size of final image
 FROM base AS dev
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_WITHOUT="development"
-
 # Install packages needed to build gems
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 FROM dev AS build
+
+# Set production environment
+ENV RAILS_ENV="production" \
+    BUNDLE_DEPLOYMENT="1" \
+    BUNDLE_WITHOUT="development"
+
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 RUN bundle install && \

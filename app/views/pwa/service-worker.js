@@ -4,6 +4,9 @@
 //   const { title, options } = await event.data.json()
 //   event.waitUntil(self.registration.showNotification(title, options))
 // })
+self.addEventListener("push", async (event) => {
+  event.waitUntil(self.registration.showNotification("A push notification", {body: 'No data at all.'}));
+})
 //
 // self.addEventListener("notificationclick", function(event) {
 //   event.notification.close()
