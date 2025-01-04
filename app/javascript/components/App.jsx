@@ -4,7 +4,6 @@ function csrfTokenHeaders() {
     .getAttribute("content");
   return {
     "X-CSRF-Token": token,
-    "Content-Type": "application/json",
   };
 }
 
@@ -51,7 +50,7 @@ function PushNotificationPermission() {
 
       fetch(`/webpush_subscriptions`, {
         method: "POST",
-        headers: csrfTokenHeaders(),
+        headers: {...csrfTokenHeaders(), "Content-Type": "application/json"},
         body: JSON.stringify({ subscription: { endpoint } }),
       }).then((res) => {
         console.log({ res });
@@ -62,10 +61,32 @@ function PushNotificationPermission() {
   return <button onClick={handleClick}>Enable push notification</button>;
 }
 
+function MessageForm() {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const action = form.action;
+    const method = form.method;
+    const body = new FormData(form);
+    const headers = csrfTokenHeaders();
+
+    await fetch(action, { method, body, headers });
+  };
+
+  return (
+    <form action='/messages' method='POST' onSubmit={handleSubmit}>
+      <input type='text' name='payload' />
+      <button type='submit'>Post</button>
+    </form>
+  )
+}
+
 export default function App() {
   return (
     <>
       <PushNotificationPermission />
+      <hr/>
+      <MessageForm />
     </>
   );
 }

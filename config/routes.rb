@@ -12,4 +12,5 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "webpush_subscriptions#index"
   resources :webpush_subscriptions, only: [:create]
+  resources :messages, only: [:create]
 end

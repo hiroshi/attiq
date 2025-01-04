@@ -1,7 +1,19 @@
 require_relative "boot"
 
-require "rails/all"
+# https://www.mongodb.com/docs/mongoid/current/tutorials/getting-started-rails7/#loaded-frameworks
+# require "rails/all"
+require "rails"
 
+# require "active_record/railtie" rescue LoadError
+# require "active_storage/engine" rescue LoadError
+require "action_controller/railtie" rescue LoadError
+require "action_view/railtie" rescue LoadError
+require "action_mailer/railtie" rescue LoadError
+require "active_job/railtie" rescue LoadError
+# require "action_cable/engine" rescue LoadError
+# require "action_mailbox/engine" rescue LoadError
+# require "action_text/engine" rescue LoadError
+# require "rails/test_unit/railtie" rescue LoadError
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
@@ -23,5 +35,10 @@ module App
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # https://www.mongodb.com/docs/mongoid/current/reference/configuration/#loading-mongoid-configuration
+    config.generators do |g|
+      g.orm :mongoid
+    end
   end
 end
