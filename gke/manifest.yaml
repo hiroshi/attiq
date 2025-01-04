@@ -17,6 +17,7 @@ spec:
       labels:
         app: attic
     spec:
+      serviceAccountName: attic
       containers:
         - command:
             - ./bin/rails
@@ -37,11 +38,13 @@ spec:
             - mountPath: /rails/config/master.key
               name: master-key
               subPath: master.key
-      serviceAccountName: attic
       volumes:
-        - csi:
-            driver: secrets-store-gke.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: attic-master-key
-          name: master-key
+        - name: master-key
+          secret:
+            secretName: attiq-master-key
+        # - csi:
+        #     driver: secrets-store-gke.csi.k8s.io
+        #     readOnly: true
+        #     volumeAttributes:
+        #       secretProviderClass: attic-master-key
+        #   name: master-key
