@@ -1,3 +1,5 @@
+import {useState, useEffect} from 'react';
+
 function csrfTokenHeaders() {
   const token = document
     .querySelector("meta[name=csrf-token]")
@@ -21,9 +23,10 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 function PushNotificationPermission() {
-  const handleClick = async () => {
-    const registration = await navigator.serviceWorker.register("./service-worker.js");
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
+    const registration = await navigator.serviceWorker.register("./service-worker.js");
     const result = await window.Notification.requestPermission();
 
     if (result === "granted") {
@@ -48,33 +51,59 @@ function PushNotificationPermission() {
       const endpoint = subscription.endpoint;
       console.log(endpoint);
 
-      fetch(`/webpush_subscriptions`, {
-        method: "POST",
-        headers: {...csrfTokenHeaders(), "Content-Type": "application/json"},
-        body: JSON.stringify({ subscription: { endpoint } }),
+
+      const form = event.target;
+      const formData = new FormData(form);
+      formData.set('subscription[endpoint]', endpoint);
+
+      fetch(form.action, {
+        method: form.method,
+        headers: csrfTokenHeaders(),
+        body: formData,
       }).then((res) => {
         console.log({ res });
       });
     }
   };
 
-  return <button onClick={handleClick}>Enable push notification</button>;
+  return (
+    <form action='/webpush_subscriptions' method='post' onSubmit={handleSubmit}>
+      <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' />
+      <button type='submit'>Enable push notification</button>
+    </form>
+  );
+}
+
+function SubscriptionOptions() {
+  const [subscriptions, setSubscriptions] = useState([]);
+
+  useEffect(() => {
+    fetch('/subscriptions')
+      .then(res => res.json())
+      .then(subs => setSubscriptions(subs));
+  }, []);
+
+  return subscriptions.map((sub) => {
+    return (<option value={sub._id}>{sub.name}</option>)
+  });
 }
 
 function MessageForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const form = event.target;
-    const action = form.action;
     const method = form.method;
     const body = new FormData(form);
     const headers = csrfTokenHeaders();
 
-    await fetch(action, { method, body, headers });
+    await fetch(form.action, { method, body, headers });
   };
 
   return (
     <form action='/messages' method='POST' onSubmit={handleSubmit}>
+      <select name='subscription_id'>
+        <SubscriptionOptions />
+      </select>
       <input type='text' name='payload' />
       <button type='submit'>Post</button>
     </form>

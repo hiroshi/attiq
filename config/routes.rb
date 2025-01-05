@@ -10,7 +10,7 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
-  root "webpush_subscriptions#index"
-  resources :webpush_subscriptions, only: [:create]
+  root "application#root"
+  resources :subscriptions, only: [:index, :create]
   resources :messages, only: [:create]
 end

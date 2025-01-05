@@ -3,4 +3,5 @@ class Subscription
   include Mongoid::Timestamps
 
   field :endpoint, type: String
+  field :name, type: String
 end
