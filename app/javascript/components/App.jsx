@@ -67,7 +67,7 @@ function PushNotificationPermission() {
   };
 
   return (
-    <form action='/webpush_subscriptions' method='post' onSubmit={handleSubmit}>
+    <form action='/subscriptions' method='post' onSubmit={handleSubmit}>
       <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' />
       <button type='submit'>Enable push notification</button>
     </form>
