@@ -5,25 +5,35 @@
 //   event.waitUntil(self.registration.showNotification(title, options))
 // })
 self.addEventListener("push", async (event) => {
-  event.waitUntil(self.registration.showNotification("A push notification", {body: 'No data at all.'}));
+  console.log("push");
+  event.waitUntil(self.registration.showNotification("A push notification", {body: 'Click to open.'}));
 })
-//
-// self.addEventListener("notificationclick", function(event) {
-//   event.notification.close()
-//   event.waitUntil(
-//     clients.matchAll({ type: "window" }).then((clientList) => {
-//       for (let i = 0; i < clientList.length; i++) {
-//         let client = clientList[i]
-//         let clientPath = (new URL(client.url)).pathname
-//
-//         if (clientPath == event.notification.data.path && "focus" in client) {
-//           return client.focus()
-//         }
-//       }
-//
-//       if (clients.openWindow) {
-//         return clients.openWindow(event.notification.data.path)
-//       }
-//     })
-//   )
-// })
+
+self.addEventListener("notificationclick", function(event) {
+  console.log("notificationclick");
+  event.notification.close()
+  event.waitUntil(
+    clients.matchAll({ type: "window" }).then((clientList) => {
+      // const path = event.notification.data.path
+      const path = '/';
+
+      for (let i = 0; i < clientList.length; i++) {
+        let client = clientList[i]
+        let clientPath = (new URL(client.url)).pathname
+
+        if (clientPath == path && "focus" in client) {
+          return client.focus()
+        }
+      }
+
+      if (clients.openWindow) {
+        console.log(`openWindow(${path})`)
+        return clients.openWindow(path)
+      }
+    })
+  )
+})
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(self.skipWaiting());
+});
