@@ -65,5 +65,6 @@ end
 # application
 gem "vite_rails", "~> 3.0"
 gem "faraday", "~> 2.12"
-gem "jwt", "~> 2.10"
 gem "mongoid", "~> 9.0"
+gem "jwt", "~> 2.10"
+gem 'web-push'

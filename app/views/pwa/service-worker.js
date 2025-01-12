@@ -6,7 +6,10 @@
 // })
 self.addEventListener("push", async (event) => {
   console.log("push");
-  event.waitUntil(self.registration.showNotification("A push notification", {body: 'Click to open.'}));
+  console.log({ event });
+  // console.log({ text: await event.data.text() });
+  const text = await event.data.text();
+  event.waitUntil(self.registration.showNotification("A push notification", {body: text}));
 })
 
 self.addEventListener("notificationclick", function(event) {

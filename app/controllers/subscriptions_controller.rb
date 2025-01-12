@@ -5,7 +5,7 @@ class SubscriptionsController < ApplicationController
   end
 
   def create
-    Subscription.create!(params.expect(subscription: [:endpoint, :name]))
+    Subscription.create!(params.expect(subscription: [:name, :endpoint, :auth, :p256dh]))
 
     head :created
   end

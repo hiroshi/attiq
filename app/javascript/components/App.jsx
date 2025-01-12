@@ -22,6 +22,10 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
+function arrayBufferToString(arrayBuffer) {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))).replace(/\+/g, '-').replace(/\//g, '_');
+}
+
 function PushNotificationPermission() {
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -48,13 +52,20 @@ function PushNotificationPermission() {
         userVisibleOnly: true,
       });
       console.log({ subscription });
-      const endpoint = subscription.endpoint;
-      console.log(endpoint);
+      // console.log({ p256dh: subscription.getKey('p256dh'), auth: subscription.getKey('auth') });
 
+      const data = {
+        endpoint: subscription.endpoint,
+        p256dh: arrayBufferToString(subscription.getKey('p256dh')),
+        auth: arrayBufferToString(subscription.getKey('auth')),
+      }
+      console.log(data);
 
       const form = event.target;
       const formData = new FormData(form);
-      formData.set('subscription[endpoint]', endpoint);
+      formData.set('subscription[endpoint]', data.endpoint);
+      formData.set('subscription[p256dh]', data.p256dh);
+      formData.set('subscription[auth]', data.auth);
 
       fetch(form.action, {
         method: form.method,
