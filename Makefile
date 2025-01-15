@@ -1,14 +1,15 @@
 KUBECTL = kubectl --cluster=gke_topics-server_us-west1-a_topics
-IMAGE = us-west1-docker.pkg.dev/topics-server/attic/attic:$(TAG)
+IMAGE = us-west1-docker.pkg.dev/topics-server/attic/attic
 tag:
 	$(eval TAG=$(shell git rev-parse --short HEAD))
 
 docker-build: tag
-	docker build --platform=linux/amd64 -t $(IMAGE) .
+	docker build --platform=linux/amd64 -t $(IMAGE):$(TAG) .
+	docker tag $(IMAGE):$(TAG) $(IMAGE):latest
 
 # NOTE: you may need: `gcloud auth configure-docker us-west1-docker.pkg.dev`
 docker-push: tag
-	docker push $(IMAGE)
+	docker push $(IMAGE):$(TAG)
 
 export TAG
 deploy: tag sleep
