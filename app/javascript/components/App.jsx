@@ -99,7 +99,32 @@ function SubscriptionOptions() {
   });
 }
 
+function ReadClipboardButton({setText}) {
+  const handleClick = async () => {
+    const json = {};
+
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      console.log({item});
+      for (const type of item.types) {
+        const blob = await item.getType(type);
+        const text = await blob.text()
+        console.log({ type, text });
+        json[type] = text;
+      }
+    }
+    console.log(json);
+    setText(JSON.stringify(json));
+  };
+
+  return (
+    <button onClick={handleClick}>Read clipboard</button>
+  );
+}
+
 function MessageForm() {
+  const [payload, setPayload] = useState("");
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const form = event.target;
@@ -111,15 +136,44 @@ function MessageForm() {
   };
 
   return (
-    <form action='/messages' method='POST' onSubmit={handleSubmit}>
-      <select name='subscription_id'>
-        <SubscriptionOptions />
-      </select>
-      <input type='text' name='payload' />
-      <button type='submit'>Post</button>
-    </form>
+    <>
+      <form action='/messages' method='POST' onSubmit={handleSubmit}>
+        <select name='subscription_id'>
+          <SubscriptionOptions />
+        </select>
+        <input type='text' name='payload' value={payload} onChange={(e) => setPayload(e.target.value)} />
+        <button type='submit'>Post</button>
+      </form>
+
+      <ReadClipboardButton setText={setPayload}/>
+    </>
   )
 }
+
+function Message() {
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const handleServiceWorkerMessage = (event) => {
+      // if (event.data?.action === 'copyToClipboard') {
+      //   const text = event.data.text;
+      // }
+      console.log(event.data);
+      setText(event.data.text);
+    };
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+    };
+  });
+
+
+  return (
+    <p>{text}</p>
+  );
+};
+
 
 export default function App() {
   return (
@@ -127,6 +181,8 @@ export default function App() {
       <PushNotificationPermission />
       <hr/>
       <MessageForm />
+      <hr/>
+      <Message />
     </>
   );
 }

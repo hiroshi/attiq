@@ -9,7 +9,12 @@ self.addEventListener("push", async (event) => {
   console.log({ event });
   // console.log({ text: await event.data.text() });
   const text = await event.data.text();
-  event.waitUntil(self.registration.showNotification("A push notification", {body: text}));
+  event.waitUntil(
+    self.registration.showNotification(
+      "A push notification",
+      {body: text},
+    )
+  );
 })
 
 self.addEventListener("notificationclick", function(event) {
@@ -17,11 +22,16 @@ self.addEventListener("notificationclick", function(event) {
   event.notification.close()
   event.waitUntil(
     clients.matchAll({ type: "window" }).then((clientList) => {
+
+
       // const path = event.notification.data.path
       const path = '/';
 
       for (let i = 0; i < clientList.length; i++) {
         let client = clientList[i]
+
+        client.postMessage({ text: event.notification.body });
+
         let clientPath = (new URL(client.url)).pathname
 
         if (clientPath == path && "focus" in client) {
