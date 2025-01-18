@@ -5,20 +5,23 @@
 //   event.waitUntil(self.registration.showNotification(title, options))
 // })
 self.addEventListener("push", async (event) => {
-  console.log("push");
-  console.log({ event });
-  // console.log({ text: await event.data.text() });
-  const text = await event.data.text();
+  // https://developer.mozilla.org/en-US/docs/Web/API/PushEvent
+  // https://developer.mozilla.org/en-US/docs/Web/API/PushMessageData
+  console.log({ PushEvent: event });
+  const data = await event.data.json();
+  const body = data['text/plain'];
   event.waitUntil(
+    // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification
     self.registration.showNotification(
       "A push notification",
-      {body: text},
+      { body, data },
     )
   );
 })
 
 self.addEventListener("notificationclick", function(event) {
-  console.log("notificationclick");
+  console.log("notificationclick:", { event });
+  const { data } = event.notification;
   event.notification.close()
   event.waitUntil(
     clients.matchAll({ type: "window" }).then((clientList) => {
@@ -30,7 +33,7 @@ self.addEventListener("notificationclick", function(event) {
       for (let i = 0; i < clientList.length; i++) {
         let client = clientList[i]
 
-        client.postMessage({ text: event.notification.body });
+        client.postMessage({ payload: data });
 
         let clientPath = (new URL(client.url)).pathname
 

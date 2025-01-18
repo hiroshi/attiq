@@ -63,7 +63,14 @@ module Webpush
     exp = 24.hour.from_now.to_i
     jwt = JWT.encode({sub:, aud:, exp:}, key, 'ES256', {'typ': 'JWT', 'alg': 'ES256'})
 
-    body = payload ? encrypt_payload(subscription:, payload:) : ''
+    case payload
+    when nil
+      payload = ''
+    when String
+    else
+      payload = payload.to_json
+    end
+    body = encrypt_payload(subscription:, payload:)
 
     response = Faraday.post(
       subscription.endpoint,

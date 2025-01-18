@@ -99,7 +99,7 @@ function SubscriptionOptions() {
   });
 }
 
-function ReadClipboardButton({setText}) {
+function ReadClipboardButton({setPayload}) {
   const handleClick = async () => {
     const json = {};
 
@@ -114,7 +114,8 @@ function ReadClipboardButton({setText}) {
       }
     }
     console.log(json);
-    setText(JSON.stringify(json));
+    // setText(JSON.stringify(json));
+    setPayload(json);
   };
 
   return (
@@ -123,16 +124,26 @@ function ReadClipboardButton({setText}) {
 }
 
 function MessageForm() {
-  const [payload, setPayload] = useState("");
+  const [text, setText] = useState("");
+  const [payload, setPayload] = useState({});
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const form = event.target;
     const method = form.method;
-    const body = new FormData(form);
     const headers = csrfTokenHeaders();
+    const body = new FormData(form);
+
+    Object.entries(payload).forEach(([key, value]) => {
+      body.set(`payload[${key}]`, value);
+    });
 
     await fetch(form.action, { method, body, headers });
+  };
+
+  const handlePayload = (payload) => {
+    setPayload(payload);
+    setText(payload['text/plain']);
   };
 
   return (
@@ -141,25 +152,35 @@ function MessageForm() {
         <select name='subscription_id'>
           <SubscriptionOptions />
         </select>
-        <input type='text' name='payload' value={payload} onChange={(e) => setPayload(e.target.value)} />
+        <input type='text' name='payload[text/plain]' value={text} onChange={(e) => setText(e.target.value)} />
         <button type='submit'>Post</button>
       </form>
 
-      <ReadClipboardButton setText={setPayload}/>
+      <ReadClipboardButton setPayload={handlePayload}/>
     </>
   )
 }
 
 function Message() {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(<></>);
 
   useEffect(() => {
     const handleServiceWorkerMessage = (event) => {
       // if (event.data?.action === 'copyToClipboard') {
       //   const text = event.data.text;
       // }
-      console.log(event.data);
-      setText(event.data.text);
+      // https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
+      console.log(event);
+      const components = Object.entries(event.data.payload).map(([key, value]) => {
+        // console.log(`Key: ${key}, Value: ${value}`);
+        try {
+          const url = new URL(value);
+          return (<p>{key}: <a href={url} target="_blank">{value}</a></p>);
+        } catch {
+          return (<p>{key}: {value}</p>);
+        }
+      });
+      setText(components);
     };
     navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
 
