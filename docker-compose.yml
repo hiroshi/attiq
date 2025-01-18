@@ -26,8 +26,21 @@ services:
   mongo:
     image: mongo:8.0.4
 
+  # docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt .
+  caddy:
+    image: caddy
+    ports:
+      - 0.0.0.0:3011:3011
+      # - '127.0.0.1:3011:3011'
+      # - '127.0.0.1:3036:3036'
+    volumes:
+      - caddy_data:/data
+      - ./Caddyfile:/etc/caddy/Caddyfile
+
 volumes:
   bundle:
     driver: local
   node_modules:
+    driver: local
+  caddy_data:
     driver: local

@@ -1,0 +1,62 @@
+# The Caddyfile is an easy way to configure your Caddy web server.
+#
+# Unless the file starts with a global options block, the first
+# uncommented line is always the address of your site.
+#
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace ":80" below with your
+# domain name.
+
+# https://caddyserver.com/docs/caddyfile/options
+{
+	pki {
+		ca local {
+			root_cn "Caddy Local Authority - attiq"
+		}
+	}
+}
+
+# https://
+caddy.lvh.me:3011 {
+	handle_path /* {
+		root * /data/caddy/pki/authorities/local/
+		file_server browse
+
+		@files {
+			file
+		}
+
+		handle @files {
+			header Content-Disposition "attachment; filename={file}"
+		}
+
+	}
+	tls internal
+}
+
+hiroshi-sequoia.local:3011 {
+	# Set this path to your site's directory.
+	# root * /usr/share/caddy
+
+	# Enable the static file server.
+	# file_server
+
+	# Another common task is to set up a reverse proxy:
+	reverse_proxy app:3000
+	tls internal
+}
+
+# vite.lvh.me:3011 {
+# 	reverse_proxy vite:3011
+# 	tls internal
+# }
+
+# *.lvh.me:3011 {
+# 	reverse_proxy {labels.2}:3010
+# 	tls internal
+# }
+
+
+# Refer to the Caddy docs for more information:
+# https://caddyserver.com/docs/caddyfile

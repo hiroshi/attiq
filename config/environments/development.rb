@@ -72,4 +72,5 @@ Rails.application.configure do
 
   # application
   config.hosts << 'hiroshi-sequoia.local:3000'
+  config.hosts << 'hiroshi-sequoia.local:3011'
 end
