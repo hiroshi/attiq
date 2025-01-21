@@ -1,5 +1,17 @@
 import {useState, useEffect} from 'react';
 
+// https://chatgpt.com/share/678c0d7f-392c-800c-a391-3697982d0e29
+function isPWA() {
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    return true;
+  }
+  // iOS Safari
+  if (navigator.standalone) {
+    return true;
+  }
+  return false;
+}
+
 function csrfTokenHeaders() {
   const token = document
     .querySelector("meta[name=csrf-token]")
@@ -195,15 +207,38 @@ function Message() {
   );
 };
 
+function PwaInstruction() {
+  return (
+    <>
+      <p>Please open as a web app to receive Web Push. </p>
+      <p>How to install the web app:</p>
+      <ul>
+        <li><a href="https://support.google.com/chrome/answer/9658361" target='_blank'>Google Chrome</a></li>
+        <li><a href="https://support.apple.com/guide/iphone/iph42ab2f3a7/ios" target='_blank'>iPhone (Home Screen)</a></li>
+      </ul>
+    </>
+  );
+}
 
-export default function App() {
+function PwaApp() {
   return (
     <>
       <PushNotificationPermission />
       <hr/>
-      <MessageForm />
-      <hr/>
       <Message />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <>
+      { isPWA()
+        ? <PwaApp />
+        : <PwaInstruction />
+      }
+      <hr/>
+      <MessageForm />
     </>
   );
 }
