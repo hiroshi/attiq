@@ -19,32 +19,47 @@ self.addEventListener("push", async (event) => {
   );
 })
 
-self.addEventListener("notificationclick", function(event) {
+self.addEventListener("notificationclick", async function(event) {
   console.log("notificationclick:", { event });
+  // client.postMessage("notificationclick");
   const { data } = event.notification;
   event.notification.close()
+
+  // const path = event.notification.data.path
+  const path = '/';
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/Clients
+  // if (clients.openWindow) {
+  //   console.log(`openWindow(${path})`)
+  //   const clientWindow = await clients.openWindow(path);
+  //   clientWindow.postMessage({ payload: data });
+  // }
+
   event.waitUntil(
-    clients.matchAll({ type: "window" }).then((clientList) => {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Clients/matchAll
+    clients.matchAll({ type: "window" }).then(async (clientList) => {
 
-
-      // const path = event.notification.data.path
-      const path = '/';
-
-      for (let i = 0; i < clientList.length; i++) {
-        let client = clientList[i]
-
-        client.postMessage({ payload: data });
-
-        let clientPath = (new URL(client.url)).pathname
-
-        if (clientPath == path && "focus" in client) {
-          return client.focus()
+      console.log({ clientList });
+      if (clientList.length === 0) {
+        if (clients.openWindow) {
+          console.log(`openWindow(${path})`)
+          const clientWindow = await clients.openWindow(path);
+          clientWindow.postMessage({ payload: data });
         }
-      }
+      } else {
+        for (let i = 0; i < clientList.length; i++) {
+          let client = clientList[i]
 
-      if (clients.openWindow) {
-        console.log(`openWindow(${path})`)
-        return clients.openWindow(path)
+          client.postMessage({ payload: data });
+
+          // let clientPath = (new URL(client.url)).pathname;
+          // if (clientPath == path && "focus" in client) {
+          //   return client.focus()
+          // }
+          if ((i + 1) === clientList.length) {
+            return client.focus();
+          }
+        }
       }
     })
   )
