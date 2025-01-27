@@ -39,27 +39,48 @@ function arrayBufferToString(arrayBuffer) {
 }
 
 function PushNotificationPermission() {
-  const handleSubmit = async (event) => {
+  const [registration, setRegistration] = useState();
+  const [subscription, setSubscription] = useState();
+
+  useEffect(async () => {
+    // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register
+    const registration = await navigator.serviceWorker.register("./service-worker.js");
+    console.log({ registration });
+    setRegistration(registration);
+
+    const subscription = await registration.pushManager.getSubscription();
+    console.log({ subscription });
+    setSubscription(subscription);
+  }, []);
+
+  const handleUnsubscribe = async (event) => {
     event.preventDefault();
 
-    const registration = await navigator.serviceWorker.register("./service-worker.js");
+    const unsubscribed = await subscription.unsubscribe();
+    console.log({ unsubscribed });
+
+    // TODO: fetch to delete subscription
+  }
+
+  const handleSubscribe = async (event) => {
+    event.preventDefault();
+
     const result = await window.Notification.requestPermission();
 
     if (result === "granted") {
-      console.log({ registration });
       const pubKey = document.getElementsByName("webpush-pubkey")[0].content;
       console.log({ pubKey });
-      let subscription;
-      subscription = await registration.pushManager.getSubscription();
-      if (subscription) {
-        // const oldKey = subscription.getKey("p256dh");
-        // console.log({ oldKey });
-        // console.log(subscription.toJSON());
-        const unsubscribed = await subscription.unsubscribe();
-        console.log({ unsubscribed });
-      }
+      // let subscription;
+      // subscription = await registration.pushManager.getSubscription();
+      // if (subscription) {
+      //   // const oldKey = subscription.getKey("p256dh");
+      //   // console.log({ oldKey });
+      //   // console.log(subscription.toJSON());
+      //   const unsubscribed = await subscription.unsubscribe();
+      //   console.log({ unsubscribed });
+      // }
       // console.log({ keyChanged: urlBase64ToUint8Array(pubKey) !== oldKey });
-      subscription = await registration.pushManager.subscribe({
+      let subscription = await registration.pushManager.subscribe({
         applicationServerKey: urlBase64ToUint8Array(pubKey),
         userVisibleOnly: true,
       });
@@ -89,11 +110,28 @@ function PushNotificationPermission() {
     }
   };
 
-  return (
-    <form action='/subscriptions' method='post' onSubmit={handleSubmit}>
-      <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' />
-      <button type='submit'>Enable push notification</button>
+  const unsubscribeForm = (
+    <form action='/subscriptions/' method='delete' onSubmit={handleUnsubscribe}>
+      <button type='submit'>unsubscribe</button>
     </form>
+  );
+
+  const subscribeForm = (
+    <form action='/subscriptions' method='post' onSubmit={handleSubscribe}>
+      <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' />
+      <button type='submit'>Subscribe</button>
+    </form>
+  );
+
+  return (
+    <>
+      <p>A web push subscription is required to get notification.</p>
+      {
+        subscription
+        ? unsubscribeForm
+        : subscribeForm
+      }
+    </>
   );
 }
 
