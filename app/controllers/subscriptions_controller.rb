@@ -9,4 +9,9 @@ class SubscriptionsController < ApplicationController
 
     head :created
   end
+
+  def destroy
+    subscription = Subscription.find(params[:id])
+    subscription.destroy!
+  end
 end

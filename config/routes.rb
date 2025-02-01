@@ -11,6 +11,6 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "application#root"
-  resources :subscriptions, only: [:index, :create]
+  resources :subscriptions, only: [:index, :create, :destroy]
   resources :messages, only: [:create]
 end

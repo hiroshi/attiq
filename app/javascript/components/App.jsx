@@ -40,33 +40,42 @@ function arrayBufferToString(arrayBuffer) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))).replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-function Subscribed({ subscription }) {
+function Subscribed({ pushSubscription }) {
   const subscriptions = useContext(SubscriptionsContext);
+  const [subscription, setSubscription] = useState();
 
   useEffect(() => {
-    const digest = async () => {
-      const sha1 = await crypto.subtle.digest("SHA-1", (new TextEncoder).encode(subscription.endpoint));
-      const endpointSha1 = btoa(String.fromCharCode(...new Uint8Array(sha1)));
-      console.log({ endpointSha1 });
-    };
-    digest();
-    // subscriptions.forEach((sub) => {
-    // });
+    if (subscriptions.length > 0) {
+      (async () => {
+        const sha1ArrayBuffer = await crypto.subtle.digest("SHA-1", (new TextEncoder).encode(pushSubscription.endpoint));
+        const sha1 = btoa(String.fromCharCode(...new Uint8Array(sha1ArrayBuffer)));
+        const sub = subscriptions.find((sub) => sub.endpoint_sha1 === sha1);
+        // console.log(sub);
+        setSubscription(sub);
+      })();
+    }
   }, [subscriptions]);
 
   const handleUnsubscribe = async (event) => {
     event.preventDefault();
 
-    const unsubscribed = await subscription.unsubscribe();
+    const unsubscribed = await pushSubscription.unsubscribe();
     console.log({ unsubscribed });
 
     // TODO: fetch to delete subscription
+    const form = event.target;
+    fetch(form.action, {
+      method: 'delete',
+      headers: csrfTokenHeaders(),
+    }).then((res) => {
+      console.log({ res });
+    });
   }
 
   return (
     <>
-      <p>Web push: subscribed. It's ready to receive push notifications.</p>
-      <form action='/subscriptions/' method='delete' onSubmit={handleUnsubscribe}>
+      <p>Web push: "{subscription?.name}" subscribed. It's ready to receive push notifications.</p>
+      <form action={`/subscriptions/${subscription?._id}`} onSubmit={handleUnsubscribe}>
         <button type='submit'>unsubscribe</button>
       </form>
     </>
@@ -75,18 +84,19 @@ function Subscribed({ subscription }) {
 
 function PushNotificationPermission() {
   const [registration, setRegistration] = useState();
-  const [subscription, setSubscription] = useState();
+  const [pushSubscription, setPushSubscription] = useState();
 
   // FIXME: must not be async
   useEffect(async () => {
     // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register
     const registration = await navigator.serviceWorker.register("./service-worker.js");
-    console.log({ registration });
+    // console.log({ registration });
     setRegistration(registration);
 
-    const subscription = await registration.pushManager.getSubscription();
-    console.log({ subscription });
-    setSubscription(subscription);
+    // https://developer.mozilla.org/ja/docs/Web/API/PushSubscription
+    const pushSubscription = await registration.pushManager.getSubscription();
+    // console.log({ subscription });
+    setPushSubscription(pushSubscription);
   }, []);
 
   const handleSubscribe = async (event) => {
@@ -97,16 +107,16 @@ function PushNotificationPermission() {
     if (result === "granted") {
       const pubKey = document.getElementsByName("webpush-pubkey")[0].content;
       console.log({ pubKey });
-      let subscription = await registration.pushManager.subscribe({
+      let pushSubscription = await registration.pushManager.subscribe({
         applicationServerKey: urlBase64ToUint8Array(pubKey),
         userVisibleOnly: true,
       });
-      console.log({ subscription });
+      console.log({ pushSubscription });
 
       const data = {
-        endpoint: subscription.endpoint,
-        p256dh: arrayBufferToString(subscription.getKey('p256dh')),
-        auth: arrayBufferToString(subscription.getKey('auth')),
+        endpoint: pushSubscription.endpoint,
+        p256dh: arrayBufferToString(pushSubscription.getKey('p256dh')),
+        auth: arrayBufferToString(pushSubscription.getKey('auth')),
       }
       console.log(data);
 
@@ -130,7 +140,7 @@ function PushNotificationPermission() {
     <>
       <p>A web push subscription is required to get notification.</p>
       <form action='/subscriptions' method='post' onSubmit={handleSubscribe}>
-        <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' />
+        <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' autocomplete="off" />
         <button type='submit'>Subscribe</button>
       </form>
     </>
@@ -139,8 +149,8 @@ function PushNotificationPermission() {
   return (
     <>
       {
-        subscription
-        ? <Subscribed {...{ subscription }}/>
+        pushSubscription
+        ? <Subscribed {...{ pushSubscription }}/>
         : subscribeForm
       }
     </>
@@ -297,7 +307,7 @@ export default function App() {
         : <PwaInstruction />
       }
       <hr/>
-      <MessageForm />
+      { subscriptions.length > 0 && <MessageForm /> }
     </SubscriptionsContext.Provider>
   );
 }
