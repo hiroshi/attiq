@@ -40,10 +40,44 @@ function arrayBufferToString(arrayBuffer) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))).replace(/\+/g, '-').replace(/\//g, '_');
 }
 
+function Subscribed({ subscription }) {
+  const subscriptions = useContext(SubscriptionsContext);
+
+  useEffect(() => {
+    const digest = async () => {
+      const sha1 = await crypto.subtle.digest("SHA-1", (new TextEncoder).encode(subscription.endpoint));
+      const endpointSha1 = btoa(String.fromCharCode(...new Uint8Array(sha1)));
+      console.log({ endpointSha1 });
+    };
+    digest();
+    // subscriptions.forEach((sub) => {
+    // });
+  }, [subscriptions]);
+
+  const handleUnsubscribe = async (event) => {
+    event.preventDefault();
+
+    const unsubscribed = await subscription.unsubscribe();
+    console.log({ unsubscribed });
+
+    // TODO: fetch to delete subscription
+  }
+
+  return (
+    <>
+      <p>Web push: subscribed. It's ready to receive push notifications.</p>
+      <form action='/subscriptions/' method='delete' onSubmit={handleUnsubscribe}>
+        <button type='submit'>unsubscribe</button>
+      </form>
+    </>
+  );
+}
+
 function PushNotificationPermission() {
   const [registration, setRegistration] = useState();
   const [subscription, setSubscription] = useState();
 
+  // FIXME: must not be async
   useEffect(async () => {
     // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register
     const registration = await navigator.serviceWorker.register("./service-worker.js");
@@ -55,15 +89,6 @@ function PushNotificationPermission() {
     setSubscription(subscription);
   }, []);
 
-  const handleUnsubscribe = async (event) => {
-    event.preventDefault();
-
-    const unsubscribed = await subscription.unsubscribe();
-    console.log({ unsubscribed });
-
-    // TODO: fetch to delete subscription
-  }
-
   const handleSubscribe = async (event) => {
     event.preventDefault();
 
@@ -72,22 +97,11 @@ function PushNotificationPermission() {
     if (result === "granted") {
       const pubKey = document.getElementsByName("webpush-pubkey")[0].content;
       console.log({ pubKey });
-      // let subscription;
-      // subscription = await registration.pushManager.getSubscription();
-      // if (subscription) {
-      //   // const oldKey = subscription.getKey("p256dh");
-      //   // console.log({ oldKey });
-      //   // console.log(subscription.toJSON());
-      //   const unsubscribed = await subscription.unsubscribe();
-      //   console.log({ unsubscribed });
-      // }
-      // console.log({ keyChanged: urlBase64ToUint8Array(pubKey) !== oldKey });
       let subscription = await registration.pushManager.subscribe({
         applicationServerKey: urlBase64ToUint8Array(pubKey),
         userVisibleOnly: true,
       });
       console.log({ subscription });
-      // console.log({ p256dh: subscription.getKey('p256dh'), auth: subscription.getKey('auth') });
 
       const data = {
         endpoint: subscription.endpoint,
@@ -112,25 +126,21 @@ function PushNotificationPermission() {
     }
   };
 
-  const unsubscribeForm = (
-    <form action='/subscriptions/' method='delete' onSubmit={handleUnsubscribe}>
-      <button type='submit'>unsubscribe</button>
-    </form>
-  );
-
   const subscribeForm = (
-    <form action='/subscriptions' method='post' onSubmit={handleSubscribe}>
-      <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' />
-      <button type='submit'>Subscribe</button>
-    </form>
+    <>
+      <p>A web push subscription is required to get notification.</p>
+      <form action='/subscriptions' method='post' onSubmit={handleSubscribe}>
+        <input type='text' name='subscription[name]' placeholder='name (e.g. WorkMac, iPhone, etc...)' />
+        <button type='submit'>Subscribe</button>
+      </form>
+    </>
   );
 
   return (
     <>
-      <p>A web push subscription is required to get notification.</p>
       {
         subscription
-        ? unsubscribeForm
+        ? <Subscribed {...{ subscription }}/>
         : subscribeForm
       }
     </>
