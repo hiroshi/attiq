@@ -1,6 +1,7 @@
 import {useState, useEffect, useContext, createContext} from 'react';
 
 const SubscriptionsContext = createContext([]);
+const PushSubscriptionContext = createContext({ pushSubscription: null, setPushSubscription: null });
 
 // https://chatgpt.com/share/678c0d7f-392c-800c-a391-3697982d0e29
 function isPWA() {
@@ -40,8 +41,10 @@ function arrayBufferToString(arrayBuffer) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))).replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-function Subscribed({ pushSubscription }) {
+// function Subscribed({ pushSubscription, setPushSubscription }) {
+function Subscribed() {
   const subscriptions = useContext(SubscriptionsContext);
+  const { pushSubscription, setPushSubscription } = useContext(PushSubscriptionContext);
   const [subscription, setSubscription] = useState();
 
   useEffect(() => {
@@ -61,6 +64,7 @@ function Subscribed({ pushSubscription }) {
 
     const unsubscribed = await pushSubscription.unsubscribe();
     console.log({ unsubscribed });
+    setPushSubscription(null);
 
     // TODO: fetch to delete subscription
     const form = event.target;
@@ -84,7 +88,8 @@ function Subscribed({ pushSubscription }) {
 
 function PushNotificationPermission() {
   const [registration, setRegistration] = useState();
-  const [pushSubscription, setPushSubscription] = useState();
+  // const [pushSubscription, setPushSubscription] = useState();
+  const { pushSubscription, setPushSubscription } = useContext(PushSubscriptionContext);
 
   // FIXME: must not be async
   useEffect(async () => {
@@ -112,6 +117,7 @@ function PushNotificationPermission() {
         userVisibleOnly: true,
       });
       console.log({ pushSubscription });
+      setPushSubscription(pushSubscription);
 
       const data = {
         endpoint: pushSubscription.endpoint,
@@ -150,7 +156,7 @@ function PushNotificationPermission() {
     <>
       {
         pushSubscription
-        ? <Subscribed {...{ pushSubscription }}/>
+        ? <Subscribed />
         : subscribeForm
       }
     </>
@@ -293,6 +299,7 @@ function PwaApp() {
 
 export default function App() {
   const [subscriptions, setSubscriptions] = useState([]);
+  const [pushSubscription, setPushSubscription] = useState();
 
   useEffect(() => {
     fetch('/subscriptions')
@@ -302,12 +309,14 @@ export default function App() {
 
   return (
     <SubscriptionsContext.Provider value={subscriptions}>
-      { isPWA()
-        ? <PwaApp />
-        : <PwaInstruction />
-      }
-      <hr/>
-      { subscriptions.length > 0 && <MessageForm /> }
+      <PushSubscriptionContext.Provider value={{ pushSubscription, setPushSubscription }}>
+        { isPWA()
+          ? <PwaApp />
+          : <PwaInstruction />
+        }
+        <hr/>
+        { subscriptions.length > 0 && <MessageForm /> }
+      </PushSubscriptionContext.Provider>
     </SubscriptionsContext.Provider>
   );
 }
