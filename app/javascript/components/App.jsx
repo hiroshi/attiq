@@ -69,6 +69,7 @@ function Subscribed({ pushSubscription }) {
       headers: csrfTokenHeaders(),
     }).then((res) => {
       console.log({ res });
+      window.location.reload();
     });
   }
 
@@ -132,6 +133,7 @@ function PushNotificationPermission() {
         body: formData,
       }).then((res) => {
         console.log({ res });
+        window.location.reload();
       });
     }
   };
