@@ -75,7 +75,7 @@ function Subscribed({ pushSubscription }) {
 
   return (
     <>
-      <p>Web push: "{subscription?.name}" subscribed. It's ready to receive push notifications.</p>
+      <p>Web push subscription: "{subscription?.name}". It's ready to receive push notifications.</p>
       <form action={`/subscriptions/${subscription?._id}`} onSubmit={handleUnsubscribe}>
         <button type='submit'>unsubscribe</button>
       </form>
