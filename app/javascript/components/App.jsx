@@ -1,6 +1,6 @@
 import {useState, useEffect, useContext, createContext} from 'react';
 
-const AppContext = createContext({ subscriptions: [] });
+const AppContext = createContext({ subscriptions: [], pushSubscription: undefined, setPushSubscription: undefined });
 
 // https://chatgpt.com/share/678c0d7f-392c-800c-a391-3697982d0e29
 function isPWA() {
@@ -40,8 +40,8 @@ function arrayBufferToString(arrayBuffer) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))).replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-function Subscribed({ pushSubscription }) {
-  const { subscriptions } = useContext(AppContext);
+function Subscribed() {
+  const { subscriptions, pushSubscription } = useContext(AppContext);
   const [subscription, setSubscription] = useState();
 
   useEffect(() => {
@@ -85,7 +85,8 @@ function Subscribed({ pushSubscription }) {
 
 function PushNotificationPermission() {
   const [registration, setRegistration] = useState();
-  const [pushSubscription, setPushSubscription] = useState();
+  const { pushSubscription, setPushSubscription } = useContext(AppContext);
+
 
   // FIXME: must not be async
   useEffect(async () => {
@@ -295,6 +296,7 @@ function PwaApp() {
 
 export default function App() {
   const [subscriptions, setSubscriptions] = useState([]);
+  const [pushSubscription, setPushSubscription] = useState();
 
   useEffect(() => {
     fetch('/subscriptions')
@@ -303,7 +305,7 @@ export default function App() {
   }, []);
 
   return (
-    <AppContext.Provider value={{ subscriptions }}>
+    <AppContext.Provider value={{ subscriptions, pushSubscription, setPushSubscription }}>
       { isPWA()
         ? <PwaApp />
         : <PwaInstruction />
