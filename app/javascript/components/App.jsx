@@ -1,6 +1,6 @@
 import {useState, useEffect, useContext, createContext} from 'react';
 
-const SubscriptionsContext = createContext([]);
+const AppContext = createContext({ subscriptions: [] });
 
 // https://chatgpt.com/share/678c0d7f-392c-800c-a391-3697982d0e29
 function isPWA() {
@@ -41,7 +41,7 @@ function arrayBufferToString(arrayBuffer) {
 }
 
 function Subscribed({ pushSubscription }) {
-  const subscriptions = useContext(SubscriptionsContext);
+  const { subscriptions } = useContext(AppContext);
   const [subscription, setSubscription] = useState();
 
   useEffect(() => {
@@ -161,7 +161,7 @@ function PushNotificationPermission() {
 
 function SubscriptionOptions() {
   // const [subscriptions, setSubscriptions] = useState([]);
-  const subscriptions = useContext(SubscriptionsContext);
+  const { subscriptions } = useContext(AppContext);
 
   // useEffect(() => {
   //   fetch('/subscriptions')
@@ -303,13 +303,13 @@ export default function App() {
   }, []);
 
   return (
-    <SubscriptionsContext.Provider value={subscriptions}>
+    <AppContext.Provider value={{ subscriptions }}>
       { isPWA()
         ? <PwaApp />
         : <PwaInstruction />
       }
       <hr/>
       { subscriptions.length > 0 && <MessageForm /> }
-    </SubscriptionsContext.Provider>
+    </AppContext.Provider>
   );
 }
