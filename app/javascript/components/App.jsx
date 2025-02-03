@@ -1,7 +1,6 @@
 import {useState, useEffect, useContext, createContext} from 'react';
 
-const AppContext = createContext({ subscriptions: [], pushSubscription: undefined, setPushSubscription: undefined });
-
+// Helper functions
 // https://chatgpt.com/share/678c0d7f-392c-800c-a391-3697982d0e29
 function isPWA() {
   if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -40,6 +39,16 @@ function arrayBufferToString(arrayBuffer) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))).replace(/\+/g, '-').replace(/\//g, '_');
 }
 
+async function findCurrentSubscription(subscriptions, pushSubscription) {
+  const sha1ArrayBuffer = await crypto.subtle.digest("SHA-1", (new TextEncoder).encode(pushSubscription.endpoint));
+  const sha1 = btoa(String.fromCharCode(...new Uint8Array(sha1ArrayBuffer)));
+  return subscriptions.find((sub) => sub.endpoint_sha1 === sha1);
+}
+
+// Contexts
+const AppContext = createContext({ subscriptions: [], pushSubscription: undefined, setPushSubscription: undefined });
+
+// Components
 function Subscribed() {
   const { subscriptions, pushSubscription } = useContext(AppContext);
   const [subscription, setSubscription] = useState();
@@ -47,11 +56,7 @@ function Subscribed() {
   useEffect(() => {
     if (subscriptions.length > 0) {
       (async () => {
-        const sha1ArrayBuffer = await crypto.subtle.digest("SHA-1", (new TextEncoder).encode(pushSubscription.endpoint));
-        const sha1 = btoa(String.fromCharCode(...new Uint8Array(sha1ArrayBuffer)));
-        const sub = subscriptions.find((sub) => sub.endpoint_sha1 === sha1);
-        // console.log(sub);
-        setSubscription(sub);
+        setSubscription(await findCurrentSubscription(subscriptions, pushSubscription));
       })();
     }
   }, [subscriptions]);
@@ -162,16 +167,23 @@ function PushNotificationPermission() {
 
 function SubscriptionOptions() {
   // const [subscriptions, setSubscriptions] = useState([]);
-  const { subscriptions } = useContext(AppContext);
+  const { subscriptions, pushSubscription } = useContext(AppContext);
+  const [currentSubscription, setCurrentSubscription] = useState();
 
-  // useEffect(() => {
-  //   fetch('/subscriptions')
-  //     .then(res => res.json())
-  //     .then(subs => setSubscriptions(subs));
-  // }, []);
+  useEffect(() => {
+    if (subscriptions.length > 0 && pushSubscription) {
+      (async () => {
+        setCurrentSubscription(await findCurrentSubscription(subscriptions, pushSubscription));
+      })();
+    }
+  }, [subscriptions, pushSubscription]);
 
   return subscriptions.map((sub) => {
-    return (<option value={sub._id}>{sub.name}</option>)
+    let text = sub.name;
+    if (currentSubscription && sub._id == currentSubscription._id) {
+      text += " (current)";
+    }
+    return (<option value={sub._id}>{text}</option>)
   });
 }
 
