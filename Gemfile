@@ -4,8 +4,6 @@ source "https://rubygems.org"
 gem "rails", "~> 8.0.1"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
-# Use sqlite3 as the database for Active Record
-gem "sqlite3", ">= 2.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -67,4 +65,5 @@ gem "vite_rails", "~> 3.0"
 gem "faraday", "~> 2.12"
 gem "mongoid", "~> 9.0"
 gem "jwt", "~> 2.10"
-gem 'web-push'
+gem "omniauth-google-oauth2"
+gem "omniauth-rails_csrf_protection" # to avoid OmniAuth::AuthenticityError

@@ -1,4 +1,4 @@
-import {useState, useEffect, useContext, createContext} from 'react';
+import {useState, useEffect, useContext, createContext, useMemo} from 'react';
 
 // Helper functions
 // https://chatgpt.com/share/678c0d7f-392c-800c-a391-3697982d0e29
@@ -306,6 +306,33 @@ function PwaApp() {
   );
 }
 
+function LoginForm() {
+  const token = useMemo(() => csrfTokenHeaders()['X-CSRF-Token']);
+
+  return (
+    <form action='/auth/google_oauth2' method='post'>
+      <input type='hidden' name='authenticity_token' value={token} />
+      <button>Login with Google</button>
+    </form>
+  )
+}
+
+function CurrentUser() {
+  const [user, setUser] = useState();
+
+  useEffect(() => {
+    fetch('/current_user')
+      .then(res => res.json())
+      .then(setUser)
+  }, []);
+
+  return (
+    user
+      ? <p>user: {user.email}</p>
+      : <LoginForm />
+  );
+}
+
 export default function App() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [pushSubscription, setPushSubscription] = useState();
@@ -317,13 +344,17 @@ export default function App() {
   }, []);
 
   return (
-    <AppContext.Provider value={{ subscriptions, pushSubscription, setPushSubscription }}>
-      { isPWA()
-        ? <PwaApp />
-        : <PwaInstruction />
-      }
+    <>
+      <CurrentUser />
       <hr/>
-      { subscriptions.length > 0 && <MessageForm /> }
-    </AppContext.Provider>
+      <AppContext.Provider value={{ subscriptions, pushSubscription, setPushSubscription }}>
+        { isPWA()
+          ? <PwaApp />
+          : <PwaInstruction />
+        }
+        <hr/>
+        { subscriptions.length > 0 && <MessageForm /> }
+      </AppContext.Provider>
+    </>
   );
 }

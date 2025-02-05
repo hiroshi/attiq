@@ -13,4 +13,8 @@ Rails.application.routes.draw do
   root "application#root"
   resources :subscriptions, only: [:index, :create, :destroy]
   resources :messages, only: [:create]
+  resource :current_user, only: [:show]
+
+  # https://github.com/omniauth/omniauth#rails-without-devise
+  get 'auth/:provider/callback', to: 'sessions#create'
 end
