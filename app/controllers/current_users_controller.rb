@@ -1,7 +1,8 @@
 class CurrentUsersController < ApplicationController
-  def show
-    user = User.find(session[:user_id])
+  include SessionsConcern
+  before_action :login_required, only: [:show]
 
-    render json: user
+  def show
+    render json: current_user
   end
 end

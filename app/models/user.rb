@@ -4,4 +4,6 @@ class User
 
   field :uid, type: String
   field :email, type: String
+
+  has_many :subscriptions
 end

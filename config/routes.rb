@@ -14,7 +14,7 @@ Rails.application.routes.draw do
   resources :subscriptions, only: [:index, :create, :destroy]
   resources :messages, only: [:create]
   resource :current_user, only: [:show]
-
+  resource :session, only: [:destroy]
   # https://github.com/omniauth/omniauth#rails-without-devise
   get 'auth/:provider/callback', to: 'sessions#create'
 end

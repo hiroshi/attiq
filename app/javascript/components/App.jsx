@@ -46,7 +46,12 @@ async function findCurrentSubscription(subscriptions, pushSubscription) {
 }
 
 // Contexts
-const AppContext = createContext({ subscriptions: [], pushSubscription: undefined, setPushSubscription: undefined });
+const AppContext = createContext({
+  currentUser: undefined,
+  subscriptions: [],
+  pushSubscription: undefined,
+  setPushSubscription: undefined
+});
 
 // Components
 function Subscribed() {
@@ -181,7 +186,7 @@ function SubscriptionOptions() {
   return subscriptions.map((sub) => {
     let text = sub.name;
     if (currentSubscription && sub._id == currentSubscription._id) {
-      text += " (current)";
+      text += " (this)";
     }
     return (<option value={sub._id}>{text}</option>)
   });
@@ -317,18 +322,29 @@ function LoginForm() {
   )
 }
 
-function CurrentUser() {
-  const [user, setUser] = useState();
+function CurrentUser({children}) {
+  const { currentUser } = useContext(AppContext);
+  const token = useMemo(() => csrfTokenHeaders()['X-CSRF-Token']);
 
-  useEffect(() => {
-    fetch('/current_user')
-      .then(res => res.json())
-      .then(setUser)
-  }, []);
+  const LogoutForm = () => {
+    return (
+      <form action='/session' method='post'>
+        <input type='hidden' name='authenticity_token' value={token} />
+        <input type='hidden' name='_method' value='delete' />
+        <button type='submit'>Logout</button>
+      </form>
+    );
+  };
 
   return (
-    user
-      ? <p>user: {user.email}</p>
+    currentUser
+      ? (
+        <>
+          <p>user: {currentUser.email}</p>
+          <LogoutForm />
+          {children}
+        </>
+      )
       : <LoginForm />
   );
 }
@@ -336,24 +352,40 @@ function CurrentUser() {
 export default function App() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [pushSubscription, setPushSubscription] = useState();
+  const [currentUser, setCurrentUser] = useState();
 
   useEffect(() => {
-    fetch('/subscriptions')
-      .then(res => res.json())
-      .then(setSubscriptions);
+    fetch('/current_user')
+      .then(res => {
+        if (res.status === 200) {
+          return res.json()
+        } else {
+          return null;
+        }
+      })
+      .then(setCurrentUser)
   }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetch('/subscriptions')
+        .then(res => res.json())
+        .then(setSubscriptions);
+    }
+  }, [currentUser]);
 
   return (
     <>
-      <CurrentUser />
-      <hr/>
-      <AppContext.Provider value={{ subscriptions, pushSubscription, setPushSubscription }}>
-        { isPWA()
-          ? <PwaApp />
-          : <PwaInstruction />
-        }
-        <hr/>
-        { subscriptions.length > 0 && <MessageForm /> }
+      <AppContext.Provider value={{ currentUser, subscriptions, pushSubscription, setPushSubscription }}>
+        <CurrentUser>
+          <hr/>
+          { isPWA()
+            ? <PwaApp />
+            : <PwaInstruction />
+          }
+          <hr/>
+          { subscriptions.length > 0 && <MessageForm /> }
+        </CurrentUser>
       </AppContext.Provider>
     </>
   );
