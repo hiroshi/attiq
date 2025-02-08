@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "application#root"
   resources :subscriptions, only: [:index, :create, :destroy]
-  resources :messages, only: [:create]
+  resources :messages, only: [:index, :create, :destroy]
   resource :current_user, only: [:show]
   resource :session, only: [:destroy]
   # https://github.com/omniauth/omniauth#rails-without-devise

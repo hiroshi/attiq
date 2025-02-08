@@ -85,7 +85,7 @@ function Subscribed() {
 
   return (
     <>
-      <p>Web push subscription: "{subscription?.name}". It's ready to receive push notifications.</p>
+      <p title="It's ready to receive push notifications.">Web push subscription: "{subscription?.name}"</p>
       <form action={`/subscriptions/${subscription?._id}`} onSubmit={handleUnsubscribe}>
         <button type='submit'>unsubscribe</button>
       </form>
@@ -231,7 +231,13 @@ function MessageForm() {
       body.set(`payload[${key}]`, value);
     });
 
-    await fetch(form.action, { method, body, headers });
+    fetch(form.action, { method, body, headers })
+      .then(res => {
+        if (res.ok) {
+          // setText('');
+          window.location.reload();
+        }
+      });
   };
 
   const handlePayload = (payload) => {
@@ -242,10 +248,13 @@ function MessageForm() {
   return (
     <>
       <form action='/messages' method='POST' onSubmit={handleSubmit}>
+        To: <input type='text' name='email' placeholder='email or blank(yourself)' />
+        <br/>
         <select name='subscription_id'>
+          <option value=''>No push</option>
           <SubscriptionOptions />
         </select>
-        <input type='text' name='payload[text/plain]' value={text} onChange={(e) => setText(e.target.value)} />
+        <input type='text' name='payload[text/plain]' value={text} onChange={(e) => setText(e.target.value)} autocomplete="off" />
         <button type='submit'>Post</button>
       </form>
 
@@ -254,7 +263,7 @@ function MessageForm() {
   )
 }
 
-function Message() {
+function PushMessage() {
   const [text, setText] = useState(<></>);
 
   useEffect(() => {
@@ -306,7 +315,7 @@ function PwaApp() {
     <>
       <PushNotificationPermission />
       <hr/>
-      <Message />
+      <PushMessage />
     </>
   );
 }
@@ -349,6 +358,48 @@ function CurrentUser({children}) {
   );
 }
 
+function Messages() {
+  const [messages, setMessages] = useState([]);
+  const { currentUser } = useContext(AppContext);
+
+  useEffect(() => {
+    fetch('/messages')
+      .then(res => res.json())
+      .then(setMessages);
+  }, []);
+
+  const Message = ({ message }) => {
+    const text = message.payload['text/plain'];
+
+    let other_user = null;
+    if (currentUser._id != message.receiver._id) {
+      other_user = `(to ${message.receiver.email})`;
+    } else if (currentUser._id != message.sender._id) {
+      other_user = `(from ${message.sender.email})`;
+    }
+
+    const handleDelete = (event) => {
+      fetch(`/messages/${message._id}`, {
+        method: 'delete',
+        headers: csrfTokenHeaders(),
+      }).then(res => {
+        window.location.reload();
+      });
+    };
+
+    return <li>{text} {other_user}<button onClick={handleDelete}>❌</button></li>;
+  };
+
+  return (
+    <>
+      <p>Messages:</p>
+      <ul>
+        { messages.map(message => <Message {...{message}} />) }
+      </ul>
+    </>
+  )
+}
+
 export default function App() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [pushSubscription, setPushSubscription] = useState();
@@ -385,6 +436,7 @@ export default function App() {
           }
           <hr/>
           { subscriptions.length > 0 && <MessageForm /> }
+          <Messages />
         </CurrentUser>
       </AppContext.Provider>
     </>
