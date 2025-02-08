@@ -248,7 +248,7 @@ function MessageForm() {
   return (
     <>
       <form action='/messages' method='POST' onSubmit={handleSubmit}>
-        To: <input type='text' name='email' placeholder='email or blank(yourself)' />
+        To: <input type='email' name='email' placeholder='email or blank(yourself)' />
         <br/>
         <select name='subscription_id'>
           <option value=''>No push</option>
@@ -370,12 +370,43 @@ function Messages() {
 
   const Message = ({ message }) => {
     const text = message.payload['text/plain'];
+    const [ack, setAck] = useState(message.ack);
+
+    const handleAck = (event) => {
+      const ack = event.target.checked;
+      // console.log(event.target.checked);
+      fetch(`/messages/${message._id}/ack`,{
+        method: 'PATCH',
+        headers: {...csrfTokenHeaders(), "Content-Type": "application/json"},
+        body: JSON.stringify({ ack })
+      }).then(res => {
+        if(res.ok) {
+          setAck(ack);
+        }
+      });
+    };
 
     let other_user = null;
     if (currentUser._id != message.receiver._id) {
-      other_user = `(to ${message.receiver.email})`;
+      other_user = (
+        <>
+          {`(to ${message.receiver.email})`}
+          <label>
+            <input type='checkbox' checked={message.ack} disabled />
+            ack
+          </label>
+        </>
+      );
     } else if (currentUser._id != message.sender._id) {
-      other_user = `(from ${message.sender.email})`;
+      other_user = (
+        <>
+          {`(from ${message.sender.email})`}
+          <label>
+            <input type='checkbox' onChange={handleAck} checked={ack}/>
+            ack
+          </label>
+        </>
+      );
     }
 
     const handleDelete = (event) => {
