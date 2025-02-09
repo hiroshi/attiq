@@ -101,7 +101,7 @@ function PushNotificationPermission() {
   // FIXME: must not be async
   useEffect(async () => {
     // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register
-    const registration = await navigator.serviceWorker.register("./service-worker.js");
+    const registration = await navigator.serviceWorker.register("/service-worker.js");
     // console.log({ registration });
     setRegistration(registration);
 
@@ -213,6 +213,25 @@ function ReadClipboardButton({setPayload}) {
 
   return (
     <button onClick={handleClick}>Read clipboard</button>
+  );
+}
+
+function Message({ message_id }) {
+  const [message, setMessage] = useState();
+
+  useEffect(() => {
+    fetch(`/messages/${message_id}`, {
+      headers: {"Accept": "application/json"},
+    }).then(res => res.json())
+      .then(setMessage);
+  }, []);
+
+  return (
+    <>
+      <a href='/'>/</a>
+      <br/>
+      { message && <MessageItem {...{message}} /> }
+    </>
   );
 }
 
@@ -331,7 +350,7 @@ function LoginForm() {
   )
 }
 
-function CurrentUser({children}) {
+function CurrentUser({ children }) {
   const { currentUser } = useContext(AppContext);
   const token = useMemo(() => csrfTokenHeaders()['X-CSRF-Token']);
 
@@ -358,74 +377,81 @@ function CurrentUser({children}) {
   );
 }
 
-function Messages() {
-  const [messages, setMessages] = useState([]);
+function MessageItem({ message }) {
   const { currentUser } = useContext(AppContext);
+  const text = message.payload['text/plain'];
+  const [ack, setAck] = useState(message.ack);
+
+  const handleAck = (event) => {
+    const ack = event.target.checked;
+    // console.log(event.target.checked);
+    fetch(`/messages/${message._id}/ack`,{
+      method: 'PATCH',
+      headers: {...csrfTokenHeaders(), "Content-Type": "application/json"},
+      body: JSON.stringify({ ack })
+    }).then(res => {
+      if(res.ok) {
+        setAck(ack);
+      }
+    });
+  };
+
+  let other_user = null;
+  if (currentUser._id != message.receiver._id) {
+    other_user = (
+      <>
+        {`(to ${message.receiver.email})`}
+        <label>
+          <input type='checkbox' checked={message.ack} disabled />
+          ack
+        </label>
+      </>
+    );
+  } else if (currentUser._id != message.sender._id) {
+    other_user = (
+      <>
+        {`(from ${message.sender.email})`}
+        <label>
+          <input type='checkbox' onChange={handleAck} checked={ack}/>
+          ack
+        </label>
+      </>
+    );
+  }
+
+  const handleDelete = (event) => {
+    fetch(`/messages/${message._id}`, {
+      method: 'delete',
+      headers: csrfTokenHeaders(),
+    }).then(res => {
+      window.location.reload();
+    });
+  };
+
+  return (
+    <span>
+      <a href={`/messages/${message._id}`}>{text}</a> {" "}
+      {other_user} {" "}
+      <button onClick={handleDelete}>❌</button>
+    </span>
+  );
+}
+
+function Messages({ message_id }) {
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    fetch('/messages')
+    const parentId = message_id ? `?parent_id=${message_id}` : '';
+    fetch(`/messages${parentId}`)
       .then(res => res.json())
       .then(setMessages);
   }, []);
-
-  const Message = ({ message }) => {
-    const text = message.payload['text/plain'];
-    const [ack, setAck] = useState(message.ack);
-
-    const handleAck = (event) => {
-      const ack = event.target.checked;
-      // console.log(event.target.checked);
-      fetch(`/messages/${message._id}/ack`,{
-        method: 'PATCH',
-        headers: {...csrfTokenHeaders(), "Content-Type": "application/json"},
-        body: JSON.stringify({ ack })
-      }).then(res => {
-        if(res.ok) {
-          setAck(ack);
-        }
-      });
-    };
-
-    let other_user = null;
-    if (currentUser._id != message.receiver._id) {
-      other_user = (
-        <>
-          {`(to ${message.receiver.email})`}
-          <label>
-            <input type='checkbox' checked={message.ack} disabled />
-            ack
-          </label>
-        </>
-      );
-    } else if (currentUser._id != message.sender._id) {
-      other_user = (
-        <>
-          {`(from ${message.sender.email})`}
-          <label>
-            <input type='checkbox' onChange={handleAck} checked={ack}/>
-            ack
-          </label>
-        </>
-      );
-    }
-
-    const handleDelete = (event) => {
-      fetch(`/messages/${message._id}`, {
-        method: 'delete',
-        headers: csrfTokenHeaders(),
-      }).then(res => {
-        window.location.reload();
-      });
-    };
-
-    return <li>{text} {other_user}<button onClick={handleDelete}>❌</button></li>;
-  };
 
   return (
     <>
       <p>Messages:</p>
       <ul>
-        { messages.map(message => <Message {...{message}} />) }
+        { messages.map(message => <li><MessageItem {...{message}} /></li>) }
       </ul>
     </>
   )
@@ -456,6 +482,10 @@ export default function App() {
     }
   }, [currentUser]);
 
+  const pathname = window.location.pathname;
+  console.log(pathname);
+  const message_id = pathname.match(/\/messages\/(.*)/)?.[1];
+
   return (
     <>
       <AppContext.Provider value={{ currentUser, subscriptions, pushSubscription, setPushSubscription }}>
@@ -466,8 +496,9 @@ export default function App() {
             : <PwaInstruction />
           }
           <hr/>
+          { message_id && <Message {...{ message_id }} /> }
           { subscriptions.length > 0 && <MessageForm /> }
-          <Messages />
+          <Messages {...{ message_id }} />
         </CurrentUser>
       </AppContext.Provider>
     </>
