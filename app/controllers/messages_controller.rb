@@ -58,6 +58,10 @@ class MessagesController < ApplicationController
 
   def as_json(sender)
     inc_opts = { only: [:_id, :email] }
-    sender.as_json(include: { receiver: inc_opts, sender: inc_opts }, except: [:receiver_id, :sender_id])
+    sender.as_json(
+      include: { receiver: inc_opts, sender: inc_opts },
+      except: [:receiver_id, :sender_id],
+      methods: [:comments_count]
+    )
   end
 end

@@ -434,6 +434,7 @@ function MessageItem({ message }) {
       <a href={`/messages/${message._id}`}>{text}</a> {" "}
       {other_user} {" "}
       <button onClick={handleDelete}>❌</button>
+      { message.comments_count > 0 && <span>({message.comments_count} comments)</span> }
     </span>
   );
 }
