@@ -228,14 +228,14 @@ function Message({ message_id }) {
 
   return (
     <>
-      <a href='/'>/</a>
-      <br/>
+      <a href='/'>{'[ <- ]'}</a>
+      <hr/>
       { message && <MessageItem {...{message}} /> }
     </>
   );
 }
 
-function MessageForm() {
+function MessageForm({ parent_id }) {
   const [text, setText] = useState("");
   const [payload, setPayload] = useState({});
 
@@ -267,6 +267,7 @@ function MessageForm() {
   return (
     <>
       <form action='/messages' method='POST' onSubmit={handleSubmit}>
+        { parent_id && <input type='hidden' name='parent_id' value={parent_id} /> }
         To: <input type='email' name='email' placeholder='email or blank(yourself)' />
         <br/>
         <select name='subscription_id'>
@@ -437,11 +438,11 @@ function MessageItem({ message }) {
   );
 }
 
-function Messages({ message_id }) {
+function Messages({ parent_id }) {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    const parentId = message_id ? `?parent_id=${message_id}` : '';
+    const parentId = parent_id ? `?parent_id=${parent_id}` : '';
     fetch(`/messages${parentId}`)
       .then(res => res.json())
       .then(setMessages);
@@ -449,7 +450,7 @@ function Messages({ message_id }) {
 
   return (
     <>
-      <p>Messages:</p>
+      <p>{ parent_id ? 'Comments:' : 'Messages:' }</p>
       <ul>
         { messages.map(message => <li><MessageItem {...{message}} /></li>) }
       </ul>
@@ -496,9 +497,9 @@ export default function App() {
             : <PwaInstruction />
           }
           <hr/>
-          { message_id && <Message {...{ message_id }} /> }
-          { subscriptions.length > 0 && <MessageForm /> }
-          <Messages {...{ message_id }} />
+          { message_id && <><Message {...{ message_id }} /><br/><br/></> }
+          { subscriptions.length > 0 && <MessageForm parent_id={message_id} /> }
+          <Messages parent_id={message_id} />
         </CurrentUser>
       </AppContext.Provider>
     </>

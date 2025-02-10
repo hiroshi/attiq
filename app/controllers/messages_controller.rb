@@ -6,7 +6,7 @@ class MessagesController < ApplicationController
     if params[:parent_id]
       criteria = Message.where(parent_id: params[:parent_id])
     else
-      criteria = Message
+      criteria = Message.where(:parent_id.exists => false)
     end
     messages = criteria.where('$or': [{sender: current_user}, {receiver: current_user}])
 
@@ -35,7 +35,11 @@ class MessagesController < ApplicationController
     # return
 
     payload = params.expect(payload: {}).to_hash
-    Message.create!(payload:, sender: current_user, receiver:)
+    message = Message.new(payload:, sender: current_user, receiver:)
+    if params[:parent_id].present?
+      message.parent_id = params[:parent_id]
+    end
+    message.save!
 
     subscription_id = params[:subscription_id]
     if subscription_id.present?
@@ -46,7 +50,8 @@ class MessagesController < ApplicationController
   end
 
   def destroy
-    current_user.messages.where(id: params[:id]).destroy
+    # FIXME: auth current_user
+    Message.where(id: params[:id]).destroy
   end
 
   private
