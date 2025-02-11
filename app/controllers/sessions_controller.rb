@@ -5,8 +5,11 @@ class SessionsController < ApplicationController
   # GET /auth/:provider/callback
   def create
     auth = request.env['omniauth.auth']
-    user = User.where(uid: auth['uid']).first_or_create!
-    user.update(email: auth.dig('info', 'email'))
+    uid = auth['uid']
+    email = auth.dig('info', 'email')
+
+    user ||= User.or({uid:}, {email:}).first || User.new
+    user.update!(uid:, email:)
     set_current_user(user)
 
     redirect_to root_path
@@ -17,5 +20,4 @@ class SessionsController < ApplicationController
 
     redirect_to root_path
   end
-
 end

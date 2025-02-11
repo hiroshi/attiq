@@ -91,4 +91,13 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 =end
+
+  # https://github.com/mongodb/mongoid/blob/902fbc44cc6afc774c6df665b6bb692489ef915d/spec/spec_helper.rb#L151
+  config.before(:each) do
+    Mongoid.purge!
+  end
+
+  config.before(:each) do |example|
+    Rails.logger.info("\n#{example.full_description}\n  from #{example.file_path}:#{example.metadata[:line_number]}")
+  end
 end
