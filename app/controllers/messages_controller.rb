@@ -8,7 +8,7 @@ class MessagesController < ApplicationController
     else
       criteria = Message.where(:parent_id.exists => false)
     end
-    messages = criteria.where('$or': [{sender: current_user}, {receiver: current_user}])
+    messages = criteria.order_by(id: :desc).where('$or': [{sender: current_user}, {receiver: current_user}])
 
     render json: as_json(messages)
   end
