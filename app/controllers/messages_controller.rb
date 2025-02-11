@@ -26,7 +26,7 @@ class MessagesController < ApplicationController
   def create
     email = params[:email]
     if email.present?
-      receiver = User.find_by(email:)
+      receiver = User.find_or_create_by(email:)
     else
       receiver = current_user
     end
