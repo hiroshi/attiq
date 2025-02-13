@@ -15,6 +15,8 @@ Rails.application.routes.draw do
   resources :messages, only: [:index, :show, :create, :destroy] do
     resource :ack, only: [:update], module: :messages
   end
+  post '/test' => 'tests#create'
+
   resource :current_user, only: [:show]
   resource :session, only: [:destroy]
   # https://github.com/omniauth/omniauth#rails-without-devise
