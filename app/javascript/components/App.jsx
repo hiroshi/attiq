@@ -1,6 +1,15 @@
 import {useState, useEffect, useContext, createContext, useMemo} from 'react';
 
 // Helper functions
+function autoLinks(text) {
+  try {
+    const url = new URL(text);
+    return (<a href={url} target="_blank">{text}</a>);
+  } catch (error) {
+    return text;
+  }
+}
+
 // https://chatgpt.com/share/678c0d7f-392c-800c-a391-3697982d0e29
 function isPWA() {
   if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -231,7 +240,7 @@ function Message({ message_id }) {
     <>
       <a href='/'>{'[ <- ]'}</a>
       <hr/>
-      { text }
+      { autoLinks(text) }
     </>
   );
 }
