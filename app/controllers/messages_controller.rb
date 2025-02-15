@@ -1,5 +1,13 @@
 class MessagesController < ApplicationController
   include SessionsConcern
+
+  before_action do #:use_post_key
+    post_key = request.headers['Authentication']&.split&.last
+    if post_key.present?
+      set_current_user(User.where(post_key:).first)
+    end
+  end
+
   before_action :login_required
 
   def index

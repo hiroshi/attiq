@@ -6,4 +6,10 @@ class User
   field :email, type: String
 
   has_many :subscriptions
+
+  field :post_key, type: String
+
+  def as_json(options={})
+    super(options).except("post_key")
+  end
 end
