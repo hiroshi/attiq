@@ -1,12 +1,15 @@
 class MessagesController < ApplicationController
   include SessionsConcern
 
-  before_action do #:use_post_key
+  skip_before_action :verify_authenticity_token, if: -> {
+    return false unless action_name == 'create'
+
     post_key = request.headers['Authentication']&.split&.last || params[:post_key]
     if post_key.present?
       set_current_user(User.where(post_key:).first)
+      true
     end
-  end
+  }
 
   before_action :login_required
 
