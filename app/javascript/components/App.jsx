@@ -218,6 +218,7 @@ function ReadClipboardButton({setPayload}) {
 
 function Message({ message_id }) {
   const [message, setMessage] = useState();
+  const text = message?.payload?.['text/plain'];
 
   useEffect(() => {
     fetch(`/messages/${message_id}`, {
@@ -230,7 +231,7 @@ function Message({ message_id }) {
     <>
       <a href='/'>{'[ <- ]'}</a>
       <hr/>
-      { message && <MessageItem {...{message}} /> }
+      { text }
     </>
   );
 }
