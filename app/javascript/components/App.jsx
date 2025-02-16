@@ -227,6 +227,8 @@ function ReadClipboardButton({setPayload}) {
 
 function Message({ message_id }) {
   const [message, setMessage] = useState();
+  const url = message?.payload?.['url'];
+  const title = message?.payload?.['title'];
   const text = message?.payload?.['text/plain'];
 
   useEffect(() => {
@@ -240,7 +242,11 @@ function Message({ message_id }) {
     <>
       <a href='/'>{'[ <- ]'}</a>
       <hr/>
-      { autoLinks(text) }
+      {
+        (url && title)
+          ? <a href={url} target='_blank'>{title}</a>
+        : autoLinks(text)
+      }
     </>
   );
 }
@@ -390,6 +396,7 @@ function CurrentUser({ children }) {
 
 function MessageItem({ message }) {
   const { currentUser } = useContext(AppContext);
+  const title = message.payload['title'];
   const text = message.payload['text/plain'];
   const [ack, setAck] = useState(message.ack);
 
@@ -441,7 +448,7 @@ function MessageItem({ message }) {
 
   return (
     <span>
-      <a href={`/messages/${message._id}`}>{text}</a> {" "}
+      <a href={`/messages/${message._id}`}>{title || text}</a> {" "}
       {other_user} {" "}
       <button onClick={handleDelete}>❌</button>
       { message.comments_count > 0 && <span>({message.comments_count} comments)</span> }
