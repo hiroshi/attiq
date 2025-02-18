@@ -55,6 +55,7 @@ class MessagesController < ApplicationController
     subscription_id = params[:subscription_id]
     if subscription_id.present?
       subscription = Subscription.find_by(id: subscription_id)
+      payload['path'] = message_path(message)
       Webpush.post(subscription:, payload:)
     end
     head :created

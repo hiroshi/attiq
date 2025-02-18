@@ -502,7 +502,7 @@ export default function App() {
   }, [currentUser]);
 
   const pathname = window.location.pathname;
-  console.log(pathname);
+  // console.log(pathname);
   const message_id = pathname.match(/\/messages\/(.*)/)?.[1];
 
   return (

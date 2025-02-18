@@ -7,7 +7,7 @@
 self.addEventListener("push", async (event) => {
   // https://developer.mozilla.org/en-US/docs/Web/API/PushEvent
   // https://developer.mozilla.org/en-US/docs/Web/API/PushMessageData
-  console.log({ PushEvent: event });
+  console.log({ push: { event } });
   const data = await event.data.json();
   const body = data['text/plain'];
   event.waitUntil(
@@ -20,13 +20,13 @@ self.addEventListener("push", async (event) => {
 })
 
 self.addEventListener("notificationclick", async function(event) {
-  console.log("notificationclick:", { event });
+  console.log({ notificationclick: { event }});
   // client.postMessage("notificationclick");
   const { data } = event.notification;
   event.notification.close()
 
   // const path = event.notification.data.path
-  const path = '/';
+  const path = data.path || '/';
 
   // https://developer.mozilla.org/en-US/docs/Web/API/Clients
   // if (clients.openWindow) {
@@ -44,13 +44,13 @@ self.addEventListener("notificationclick", async function(event) {
         if (clients.openWindow) {
           console.log(`openWindow(${path})`)
           const clientWindow = await clients.openWindow(path);
-          clientWindow.postMessage({ payload: data });
+          //clientWindow.postMessage({ payload: data });
         }
       } else {
         for (let i = 0; i < clientList.length; i++) {
           let client = clientList[i]
-
-          client.postMessage({ payload: data });
+          client.navigate(path);
+          //client.postMessage({ payload: data });
 
           // let clientPath = (new URL(client.url)).pathname;
           // if (clientPath == path && "focus" in client) {
