@@ -9,7 +9,9 @@ self.addEventListener("push", async (event) => {
   // https://developer.mozilla.org/en-US/docs/Web/API/PushMessageData
   console.log({ push: { event } });
   const data = await event.data.json();
-  const body = data['text/plain'];
+  const title = data['title'];
+  const text = data['text/plain'];
+  const body = title || text;
   event.waitUntil(
     // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification
     self.registration.showNotification(
