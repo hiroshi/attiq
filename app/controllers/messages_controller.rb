@@ -1,6 +1,7 @@
 class MessagesController < ApplicationController
   include SessionsConcern
 
+  # Allow oauth token or post_key only for #create
   skip_before_action :verify_authenticity_token, if: -> {
     return false unless action_name == 'create'
 

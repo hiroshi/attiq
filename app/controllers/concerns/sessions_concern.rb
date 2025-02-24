@@ -13,6 +13,13 @@ module SessionsConcern
   end
 
   def login_required
-    head :forbidden if current_user.blank?
+    if current_user.blank?
+      if request.format.json?
+        head :forbidden
+      else
+        # Let the layout prompt login
+        render html: '', layout: 'application'
+      end
+    end
   end
 end
