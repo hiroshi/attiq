@@ -468,7 +468,6 @@ function Messages({ parent_id }) {
 
   return (
     <>
-      <p>{ parent_id ? 'Comments:' : 'Messages:' }</p>
       <ul>
         { messages.map(message => <li><MessageItem {...{message}} /></li>) }
       </ul>
@@ -516,6 +515,7 @@ export default function App() {
           }
           <hr/>
           { message_id && <><Message {...{ message_id }} /><br/><br/></> }
+          <h3>{ message_id ? 'Comments:' : 'Messages:' }</h3>
           { subscriptions.length > 0 && <MessageForm parent_id={message_id} /> }
           <Messages parent_id={message_id} />
         </CurrentUser>
