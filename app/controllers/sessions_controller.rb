@@ -12,7 +12,7 @@ class SessionsController < ApplicationController
     user.update!(uid:, email:)
     set_current_user(user)
 
-    redirect_to root_path
+    redirect_to request.env['omniauth.origin'].presence || root_path
   end
 
   def destroy
