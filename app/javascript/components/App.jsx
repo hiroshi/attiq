@@ -400,6 +400,7 @@ function MessageItem({ message }) {
   const { currentUser } = useContext(AppContext);
   const title = message.payload['title'];
   const text = message.payload['text/plain'];
+  const url = message.payload['url'];
   const [ack, setAck] = useState(message.ack);
 
   const handleAck = (event) => {
@@ -456,6 +457,7 @@ function MessageItem({ message }) {
     <span>
       <span title={zonedDateTime.toString()}>{plainDate.toString()}</span>&nbsp;
       <a href={`/messages/${message._id}`}>{title || text}</a> {" "}
+      { url && <a href={url}>🔗</a> }
       {other_user} {" "}
       <button onClick={handleDelete}>❌</button>
       { message.comments_count > 0 && <span>({message.comments_count} comments)</span> }
