@@ -454,7 +454,7 @@ function MessageItem({ message }) {
 
   return (
     <span>
-      <span>{plainDate.toString()}</span>&nbsp;
+      <span title={zonedDateTime.toString()}>{plainDate.toString()}</span>&nbsp;
       <a href={`/messages/${message._id}`}>{title || text}</a> {" "}
       {other_user} {" "}
       <button onClick={handleDelete}>❌</button>
