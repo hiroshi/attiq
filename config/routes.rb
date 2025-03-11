@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "application#root"
   resources :subscriptions, only: [:index, :create, :destroy]
-  resources :messages, only: [:index, :show, :create, :destroy] do
+  resources :messages, only: [:index, :show, :create, :update, :destroy] do
     resource :ack, only: [:update], module: :messages
   end
   post '/test' => 'tests#create'
