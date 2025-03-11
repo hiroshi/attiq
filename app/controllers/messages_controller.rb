@@ -62,6 +62,10 @@ class MessagesController < ApplicationController
     head :created
   end
 
+  def update
+    
+  end
+
   def destroy
     # FIXME: auth current_user
     Message.where(id: params[:id]).destroy
