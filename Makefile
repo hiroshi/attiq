@@ -24,3 +24,10 @@ sleep:
 config/credentials.yml.enc:
 	docker compose run --rm -e EDITOR=nano app rails encrypted:edit config/credentials.yml.enc
 
+node-pool:
+	gcloud container node-pools create e2-small-spot-15g \
+	  --cluster=topics --location=us-west1-a \
+	  --machine-type=e2-small \
+	  --spot \
+	  --num-nodes=1 \
+	  --disk-type=pd-standard --disk-size=15G
