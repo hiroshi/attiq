@@ -1,4 +1,6 @@
 import {useState, useEffect, useContext, createContext, useMemo} from 'react';
+import {Temporal} from '@js-temporal/polyfill';
+window.Temporal = Temporal;
 
 // Helper functions
 function autoLinks(text) {
@@ -446,8 +448,13 @@ function MessageItem({ message }) {
     });
   };
 
+  const instant = Temporal.Instant.from(message.created_at);
+  const zonedDateTime = instant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
+  const plainDate = zonedDateTime.toPlainDate();
+
   return (
     <span>
+      <span>{plainDate.toString()}</span>&nbsp;
       <a href={`/messages/${message._id}`}>{title || text}</a> {" "}
       {other_user} {" "}
       <button onClick={handleDelete}>❌</button>
