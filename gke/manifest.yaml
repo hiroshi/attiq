@@ -2,22 +2,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: attic
-  name: attic
+    app: attiq
+  name: attiq
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: attic
+      app: attiq
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: attic
+        app: attiq
     spec:
-      serviceAccountName: attic
       containers:
         - command:
             - ./bin/rails
@@ -26,8 +25,8 @@ spec:
             - "3010"
             - -e
             - production
-          image: us-west1-docker.pkg.dev/topics-server/attic/attic:${TAG}
-          name: attic
+          image: ${IMAGE}:${TAG}
+          name: attiq
           ports:
             - containerPort: 3010
           resources:
@@ -42,9 +41,3 @@ spec:
         - name: master-key
           secret:
             secretName: attiq-master-key
-        # - csi:
-        #     driver: secrets-store-gke.csi.k8s.io
-        #     readOnly: true
-        #     volumeAttributes:
-        #       secretProviderClass: attic-master-key
-        #   name: master-key
