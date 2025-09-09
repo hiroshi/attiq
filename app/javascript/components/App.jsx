@@ -228,6 +228,7 @@ function ReadClipboardButton({setPayload}) {
 }
 
 function Message({ message_id }) {
+  const token = useMemo(() => csrfTokenHeaders()['X-CSRF-Token']);
   const [message, setMessage] = useState();
   const url = message?.payload?.['url'];
   const title = message?.payload?.['title'];
@@ -249,6 +250,16 @@ function Message({ message_id }) {
           ? <a href={url} target='_blank'>{title}</a>
         : autoLinks(text)
       }
+      <form action={`/messages/${message_id}`} method='POST'>
+        <input type='hidden' name='authenticity_token' value={token} />
+        <input type="hidden" name="_method" value="put" />
+        To: <input type='email' name='email' placeholder='email or blank(yourself)' />
+        <select name='subscription_id'>
+          <option value=''>No push</option>
+          <SubscriptionOptions />
+        </select>
+        <button type='submit'>update</button>
+      </form>
     </>
   );
 }
@@ -328,7 +339,6 @@ function PushMessage() {
       navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
     };
   });
-
 
   return (
     <p>{text}</p>
