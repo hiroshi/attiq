@@ -467,19 +467,48 @@ function MessageItem({ message }) {
 
 function Messages({ parent_id }) {
   const [messages, setMessages] = useState([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const limit = 30;
+
+  const fetchMessages = (offset = 0) => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (parent_id) params.set('parent_id', parent_id);
+    params.set('limit', limit);
+    params.set('offset', offset);
+
+    fetch(`/messages?${params.toString()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (offset === 0) {
+          setMessages(data.messages);
+        } else {
+          setMessages(prev => [...prev, ...data.messages]);
+        }
+        setHasMore(data.has_more);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
-    const parentId = parent_id ? `?parent_id=${parent_id}` : '';
-    fetch(`/messages${parentId}`)
-      .then(res => res.json())
-      .then(setMessages);
+    fetchMessages(0);
   }, []);
+
+  const handleLoadMore = () => {
+    fetchMessages(messages.length);
+  };
 
   return (
     <>
       <ul>
-        { messages.map(message => <li><MessageItem {...{message}} /></li>) }
+        { messages.map(message => <li key={message._id}><MessageItem {...{message}} /></li>) }
       </ul>
+      { hasMore && (
+        <button onClick={handleLoadMore} disabled={loading}>
+          {loading ? 'Loading...' : 'more'}
+        </button>
+      )}
     </>
   )
 }

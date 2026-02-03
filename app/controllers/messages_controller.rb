@@ -22,7 +22,14 @@ class MessagesController < ApplicationController
     end
     messages = criteria.order_by(id: :desc).where('$or': [{sender: current_user}, {receiver: current_user}])
 
-    render json: as_json(messages)
+    limit = (params[:limit] || 30).to_i
+    offset = (params[:offset] || 0).to_i
+    paginated = messages.skip(offset).limit(limit + 1)
+
+    has_more = paginated.count > limit
+    result = paginated.limit(limit)
+
+    render json: { messages: as_json(result), has_more: has_more }
   end
 
   def show
