@@ -29,7 +29,7 @@ class MessagesController < ApplicationController
     has_more = paginated.count > limit
     result = paginated.limit(limit)
 
-    render json: { messages: as_json(result), has_more: has_more }
+    render json: { messages: as_json(result), has_more: }
   end
 
   def show
